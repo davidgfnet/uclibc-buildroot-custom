@@ -4,15 +4,28 @@
 #
 ################################################################################
 
-GCC_FINAL_VERSION = $(GCC_VERSION)
-GCC_FINAL_SITE    = $(GCC_SITE)
-GCC_FINAL_SOURCE  = $(GCC_SOURCE)
+GCC_FINAL_VERSION = gcc-4_7_3-release
+
+GCC_FINAL_SITE = git://github.com/davidgfnet/gcc.git
+GCC_FINAL_SITE_METHOD = git
+GCC_FINAL_SOURCE = gcc-4.7.3-git.tar.gz
 
 HOST_GCC_FINAL_DEPENDENCIES = \
 	$(HOST_GCC_COMMON_DEPENDENCIES) \
 	$(BUILDROOT_LIBC)
 
-HOST_GCC_FINAL_EXTRACT_CMDS = $(HOST_GCC_EXTRACT_CMDS)
+define HOST_GCC_FINAL_EXTRACT_CMDS
+	$(ZCAT) $(DL_DIR)/$(GCC_FINAL_SOURCE) | \
+		$(TAR) $(TAR_STRIP_COMPONENTS)=1 -C $(@D) \
+		--exclude='libjava/*' \
+		--exclude='libgo/*' \
+		--exclude='gcc/testsuite/*' \
+		--exclude='libstdc++-v3/testsuite/*' \
+		$(TAR_OPTIONS) -
+	mkdir -p $(@D)/libstdc++-v3/testsuite/
+	echo "all:" > $(@D)/libstdc++-v3/testsuite/Makefile.in
+	echo "install:" >> $(@D)/libstdc++-v3/testsuite/Makefile.in
+endef
 
 ifneq ($(call qstrip, $(BR2_XTENSA_CORE_NAME)),)
 HOST_GCC_FINAL_POST_EXTRACT_CMDS += HOST_GCC_FINAL_XTENSA_OVERLAY_EXTRACT
